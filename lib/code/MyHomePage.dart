@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:major_project/code/api/sanketapi.dart';
+import 'package:major_project/code/entity/ResultEntity.dart';
+import 'package:major_project/code/widget/ResultPage.dart';
+import 'package:major_project/code/widget/SymptomsPage.dart';
+import 'package:major_project/code/widget/TempPage.dart';
+
+import 'widget/AboutUs.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -7,76 +14,46 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var _symtomesList = [];
-  List _selectedSymtomes = [];
-  bool isLoading = false;
-  @override
-  void initState() {
-    getInit();
-    super.initState();
-  }
+  int _selectedIndex = 0;
+  List<Widget> _pages = <Widget>[SymptomsPage(), AboutUs()];
 
-  getInit() async {
-    _symtomesList = await SanketApi().getListofSymtoms();
-    print(_symtomesList.length);
+  void _onItemTapped(int index) {
     setState(() {
-      isLoading = false;
+      _selectedIndex = index;
     });
   }
 
-  void _onCategorySelected(bool? selected, String value) {
-    if (selected == null) return;
-    if (selected == true) {
-      setState(() {
-        _selectedSymtomes.add(value);
-      });
-    } else {
-      setState(() {
-        _selectedSymtomes.remove(value);
-      });
-    }
+  void setResultAndGettoResultPage(ResultEntity? resData) {
+    _onItemTapped(1);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.green,
-        body: isLoading
-            ? Center(
-                child: Container(
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            : Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _symtomesList.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return CheckboxListTile(
-                          value:
-                              _selectedSymtomes.contains(_symtomesList[index]),
-                          onChanged: (bool? selected) {
-                            _onCategorySelected(selected, _symtomesList[index]);
-                            print("hello $selected");
-                          },
-                          title: Text(
-                            "${_symtomesList[index]}",
-                            style: TextStyle(color: Colors.amberAccent),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  ElevatedButton(
-                      onPressed: () async {
-                        print(_selectedSymtomes);
-                        var res = await SanketApi()
-                            .getDiseaseBySymtoms(_selectedSymtomes);
-                        print(res);
-                      },
-                      child: Text("find"))
-                ],
-              ));
+        appBar: AppBar(
+          title: Text(
+            _selectedIndex == 0 ? "Symptoms" : "About Us",
+            style: GoogleFonts.dmSerifDisplay(color: Colors.black),
+          ),
+          backgroundColor: Colors.white,
+        ),
+        backgroundColor: Colors.white,
+        bottomNavigationBar: BottomNavigationBar(
+          unselectedItemColor: Colors.black87,
+          selectedItemColor: Colors.black,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.masks),
+              label: 'Disease',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.verified_user_outlined),
+              label: 'About Us',
+            ),
+          ],
+          currentIndex: _selectedIndex, //New
+          onTap: _onItemTapped,
+        ),
+        body: _pages[_selectedIndex]);
   }
 }

@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
+import 'package:major_project/code/entity/ResultEntity.dart';
 
 class SanketApi {
   String _baseUrl = "https://prediction-disease-api.herokuapp.com";
@@ -26,23 +29,25 @@ class SanketApi {
     return response.data['data'];
   }
 
-  Future<dynamic> getDiseaseBySymtoms(List symtomsList) async {
-    final url = "/api/predict/";
+  Future<ResultEntity?> getDiseaseBySymtoms(List symtomsList) async {
+    final url = "/api/predict";
 
     print(_baseUrl + url);
 
     var dio = Dio();
-    FormData formData =
-        FormData.fromMap({"data": getSystomsInString(symtomsList)});
     print("$_baseUrl$url");
-
+    var data = jsonEncode({"data": getSystomsInString(symtomsList)});
+    print(data);
     var response = await dio.post(
       _baseUrl + url,
-      data: formData,
+      data: data,
       options: Options(contentType: 'multipart/form-data'),
     );
 
-    return response.data;
+    if (response.data == null) return null;
+    print(response.data['data']);
+    return ResultEntity(response.data['data']['predicted'],
+        int.parse(response.data['data']['confidencescore']));
   }
 
   String getSystomsInString(List symtomsList) {
